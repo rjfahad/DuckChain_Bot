@@ -104,9 +104,9 @@ class Tapper:
     async def make_request(self, http_client, method, endpoint=None, url=None, **kwargs):
         full_url = url or f"https://preapi.duckchain.io{endpoint or ''}"
         response = await http_client.request(method, full_url, **kwargs)
-        print("Request URL:", full_url)
-        print("Request Headers:", http_client.headers)
-        print("Response:", response)
+        # print("Request URL:", full_url)
+        # print("Request Headers:", http_client.headers)
+        # print("Response:", response)
         response.raise_for_status()
         return await response.json()
     
