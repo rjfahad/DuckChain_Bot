@@ -99,60 +99,14 @@ class Tapper:
             logger.error(f"{self.session_name} | Unknown error: {error}")
             await asyncio.sleep(delay=3)
             return None, None
-        
-    @error_handler
-    async def join_and_mute_tg_channel(self, link: str):
-        await asyncio.sleep(delay=random.randint(15, 30))
-        
-        if not self.tg_client.is_connected:
-            await self.tg_client.connect()
 
-        try:
-            parsed_link = link if 'https://t.me/+' in link else link[13:]
-            
-            chat = await self.tg_client.get_chat(parsed_link)
-            
-            if chat.username:
-                chat_username = chat.username
-            elif chat.id:
-                chat_username = chat.id
-            else:
-                logger.info("Unable to get channel username or id")
-                return
-            
-            logger.info(f"{self.session_name} | Retrieved channel: <y>{chat_username}</y>")
-            try:
-                await self.tg_client.get_chat_member(chat_username, "me")
-            except Exception as error:
-                if error.ID == 'USER_NOT_PARTICIPANT':
-                    await asyncio.sleep(delay=3)
-                    chat = await self.tg_client.join_chat(parsed_link)
-                    chat_id = chat.id
-                    logger.info(f"{self.session_name} | Successfully joined chat <y>{chat_username}</y>")
-                    await asyncio.sleep(random.randint(5, 10))
-                    peer = await self.tg_client.resolve_peer(chat_id)
-                    await self.tg_client.invoke(account.UpdateNotifySettings(
-                        peer=InputNotifyPeer(peer=peer),
-                        settings=InputPeerNotifySettings(mute_until=2147483647)
-                    ))
-                    logger.info(f"{self.session_name} | Successfully muted chat <y>{chat_username}</y>")
-                else:
-                    logger.error(f"{self.session_name} | Error while checking channel: <y>{chat_username}</y>: {str(error.ID)}")
-        except Exception as e:
-            logger.error(f"{self.session_name} | Error joining/muting channel {link}: {str(e)}")
-            await asyncio.sleep(delay=3)    
-        finally:
-            if self.tg_client.is_connected:
-                await self.tg_client.disconnect()
-            await asyncio.sleep(random.randint(10, 20))
-    
     @error_handler
     async def make_request(self, http_client, method, endpoint=None, url=None, **kwargs):
         full_url = url or f"https://preapi.duckchain.io{endpoint or ''}"
         response = await http_client.request(method, full_url, **kwargs)
-        # print("Request URL:", full_url)
-        # print("Request Headers:", http_client.headers)
-        # print("Response:", response)
+        print("Request URL:", full_url)
+        print("Request Headers:", http_client.headers)
+        print("Response:", response)
         response.raise_for_status()
         return await response.json()
     
@@ -162,8 +116,8 @@ class Tapper:
         return response if response.get("code") == 200 else None
     
     @error_handler
-    async def open_box(self, http_client, open_type=1):
-        response = await self.make_request(http_client, 'POST', endpoint="/box/open", json={'openType': open_type})
+    async def open_box(self, http_client):
+        response = await self.make_request(http_client, 'GET', endpoint="/box/open?openType=-1")
         return response if response.get("code") == 200 else None
     
     @error_handler
@@ -299,7 +253,7 @@ class Tapper:
                         quantity = box_data['data'].get('quantity', 0)
                         obtain_point = box_data['data'].get('obtain', 0)
                         boxes_left = box_data['data'].get('boxesLeft', 0)
-                        logger.info(f"{self.session_name} | Quantity : <g>{quantity}</g> | Points : <g>{obtain_point}</g>")
+                        logger.info(f"{self.session_name} | Opened Box : <g>{quantity}</g> | Points : <g>+{obtain_point}</g>")
                         
                         if boxes_left == 0:
                             logger.info(f"{self.session_name} | <y>All box opened!</y>")
