@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     API_ID: int = 12345
     API_HASH: str = 'abcd'
    
-    REF_ID: str = 'KvNYn05S'
+    REF_ID: str = 'yK6n6LnN'
     SUPPORT_AUTHOR: bool = True
     OPEN_BOX: bool = True
     AUTO_TASK: bool = True
